@@ -179,8 +179,7 @@ esv_validation <- function(match_to_filter_out){
   
   avg_rwr <- shot_df %>%
     filter(
-      !(plc == '1S' & strike_significance == 'out_of_bounds'), return_significance != 'insignificant'
-    ) %>%
+      !(plc == '1S' & strike_significance == 'out_of_bounds'), return_significance != 'insignificant') %>%
     count(return_significance) %>%
     mutate(weight = weights_df$weight[match(return_significance, weights_df$significance)]) %>%
     summarise(x = sum(n*weight)/sum(n)) %>%
@@ -223,15 +222,16 @@ esv_validation <- function(match_to_filter_out){
     MoreArgs = list(is_striker = F))
   
   df <- shot_df_subset %>%
-    select(internal_point_id,
-           plc,
-           time,
-           striker_name,
-           esv_striker,
-           striker_won_point,
-           returner_name,
-           esv_returner,
-           returner_won_point) %>%
+    select(
+      internal_point_id,
+      plc,
+      time,
+      striker_name,
+      esv_striker,
+      striker_won_point,
+      returner_name,
+      esv_returner,
+      returner_won_point) %>%
     data.frame(stringsAsFactors = F)
   
   # if(return_all_info){
