@@ -5,16 +5,16 @@ swr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
   
   df <- shot_df %>%
     filter(!(internal_point_id %in% matches_to_filter_out)) %>%
-    count(striker_name, plc, strike_significance) %>%
+    count(striker_id, plc, strike_significance) %>%
     mutate(weight_per_strike = weights_df$weight[match(strike_significance, weights_df$significance)]) %>%
     filter(!(plc == '1S' & strike_significance %in% c('out_of_bounds', 'net'))) %>%
     mutate(weight = n*weight_per_strike)
   
-  if(avg){ df <- df %>% group_by(plc) } else { df <- df %>% group_by(striker_name, plc) }
+  if(avg){ df <- df %>% group_by(plc) } else { df <- df %>% group_by(striker_id, plc) }
     
   df <- df %>% summarise(swr = sum(weight)/sum(n)) %>% ungroup()
   
-  if(avg){ df <- df %>% arrange(plc) } else { df <- df %>% arrange(striker_name, plc) }
+  if(avg){ df <- df %>% arrange(plc) } else { df <- df %>% arrange(striker_id, plc) }
   
   df
 }
@@ -28,15 +28,15 @@ rwr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
   df <- shot_df %>%
     filter(!(internal_point_id %in% match_to_filter_out)) %>%
     filter(return_significance != 'insignificant') %>%
-    count(returner_name, plc, return_significance) %>%
+    count(returner_id, plc, return_significance) %>%
     mutate(weight_per_return = weights_df$weight[match(return_significance, weights_df$significance)]) %>%
     mutate(weight = n*weight_per_return)
   
-  if(avg){ df <- df %>% group_by(plc) } else { df <- df %>% group_by(returner_name, plc) }
+  if(avg){ df <- df %>% group_by(plc) } else { df <- df %>% group_by(returner_id, plc) }
   
   df <- df %>% summarise(rwr = sum(weight)/sum(n)) %>% ungroup()
   
-  if(avg){ df <- df %>% arrange(plc) } else { df <- df %>% arrange(returner_name, plc) }
+  if(avg){ df <- df %>% arrange(plc) } else { df <- df %>% arrange(returner_id, plc) }
   
   df
 }
@@ -57,13 +57,13 @@ trans_prob_matrix <- function(X, prob = T){
 
 player_tpm_calc <- function(shot_df){
   
-  players <- shot_df$striker_name %>% unique()
+  players <- shot_df$striker_id %>% unique()
   player_tpm <- list()
   for(p in players){
     
     X <- shot_df %>%
       filter(!(internal_point_id %in% match_to_filter_out)) %>%
-      filter(striker_name == p) %>%
+      filter(striker_id == p) %>%
       select(plc, next_plc) %>%
       as.matrix()
     
@@ -138,17 +138,17 @@ esv_calc <- function(str_name, ret_name, plc, is_striker = TRUE){
   
   if(is_striker){
     wr_df <- rwr_df %>%
-      filter(returner_name == str_name, plc %in% rownames(non_wl_prob)) %>%
+      filter(returner_id == str_name, plc %in% rownames(non_wl_prob)) %>%
       select(plc, rwr) %>%
       rename(wr = rwr)
-    avg_wr_df <- rwr_df %>% filter(returner_name == 'AVG') %>% rename(wr = rwr)
+    avg_wr_df <- rwr_df %>% filter(returner_id == 'AVG') %>% rename(wr = rwr)
     avg_wr <- avg_rwr
   } else {
     wr_df <- swr_df %>%
-      filter(striker_name == ret_name, plc %in% rownames(non_wl_prob)) %>%
+      filter(striker_id == ret_name, plc %in% rownames(non_wl_prob)) %>%
       select(plc, swr) %>%
       rename(wr = swr)
-    avg_wr_df <- swr_df %>% filter(striker_name == 'AVG') %>% rename(wr = swr)
+    avg_wr_df <- swr_df %>% filter(striker_id == 'AVG') %>% rename(wr = swr)
     avg_wr <- avg_swr
   }
   
@@ -189,14 +189,14 @@ esv_validation <- function(match_to_filter_out){
   swr_df <- swr_calc(shot_df = shot_df, matches_to_filter_out = match_to_filter_out, avg = F)
   avg_swr_df <- swr_calc(shot_df = shot_df, matches_to_filter_out = match_to_filter_out, avg = T)
   avg_swr_df <- cbind('AVG', avg_swr_df, stringsAsFactors = F)
-  colnames(avg_swr_df) <- c('striker_name', 'plc', 'swr')
+  colnames(avg_swr_df) <- c('striker_id', 'plc', 'swr')
   swr_df <- rbind(swr_df, avg_swr_df)
   
   # Return Win Rate Calculation ----
   rwr_df <- rwr_calc(shot_df = shot_df, matches_to_filter_out = match_to_filter_out, avg = F)
   avg_rwr_df <- rwr_calc(shot_df = shot_df, matches_to_filter_out = match_to_filter_out, avg = T)
   avg_rwr_df <- cbind('AVG', avg_rwr_df, stringsAsFactors = F)
-  colnames(avg_rwr_df) <- c('returner_name', 'plc', 'rwr')
+  colnames(avg_rwr_df) <- c('returner_id', 'plc', 'rwr')
   rwr_df <- rbind(rwr_df, avg_rwr_df)
   
   # Transition Probability Matrices for each player ----
@@ -209,15 +209,15 @@ esv_validation <- function(match_to_filter_out){
   
   shot_df_subset$esv_striker <- mapply(
     esv_calc,
-    shot_df_subset$striker_name,
-    shot_df_subset$returner_name,
+    shot_df_subset$striker_id,
+    shot_df_subset$returner_id,
     shot_df_subset$plc,
     MoreArgs = list(is_striker = T))
   
   shot_df_subset$esv_returner <- mapply(
     esv_calc,
-    shot_df_subset$striker_name,
-    shot_df_subset$returner_name,
+    shot_df_subset$striker_id,
+    shot_df_subset$returner_id,
     shot_df_subset$plc,
     MoreArgs = list(is_striker = F))
   
@@ -226,10 +226,10 @@ esv_validation <- function(match_to_filter_out){
       internal_point_id,
       plc,
       time,
-      striker_name,
+      striker_id,
       esv_striker,
       striker_won_point,
-      returner_name,
+      returner_id,
       esv_returner,
       returner_won_point) %>%
     data.frame(stringsAsFactors = F)

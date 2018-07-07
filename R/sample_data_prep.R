@@ -140,12 +140,12 @@ shot_df <- tBall %>%
                                  x1, y1, PName1, x2, y2, PName2),
             by = c('internal_point_id' = 'internal_point_id',
                    'rounded_time' = 'time_string')) %>%
-  mutate(striker_name = playerName,
-         returner_name = ifelse(playerName == PName1, PName2, PName1)) %>%
-  mutate(striker_x_coordinate = ifelse(striker_name == PName1, x1, x2),
-         striker_y_coordinate = ifelse(striker_name == PName1, y1, y2),
-         returner_x_coordinate = ifelse(returner_name == PName1, x1, x2),
-         returner_y_coordinate = ifelse(returner_name == PName1, y1, y2)) %>%
+  mutate(striker_id = playerName,
+         returner_id = ifelse(playerName == PName1, PName2, PName1)) %>%
+  mutate(striker_x_coordinate = ifelse(striker_id == PName1, x1, x2),
+         striker_y_coordinate = ifelse(striker_id == PName1, y1, y2),
+         returner_x_coordinate = ifelse(returner_id == PName1, x1, x2),
+         returner_y_coordinate = ifelse(returner_id == PName1, y1, y2)) %>%
   group_by(internal_point_id) %>%
   mutate(strike_significance = point_shot_classifier(final_bounce),
          is_serve_return = ifelse(row_number() == 2, 1, 0),
@@ -160,8 +160,8 @@ shot_df <- tBall %>%
     ifelse(is_serve_return == 1, paste0(serve_number, 'SR'), paste0(striker_region, '-', returner_region)))) %>%
   left_join(tPoint %>% select(internal_point_id, scorerName),
             by = c('internal_point_id')) %>%
-  mutate(striker_won_point = ifelse(striker_name == scorerName, 1, 0),
-         returner_won_point = ifelse(returner_name == scorerName, 1, 0)) %>%
+  mutate(striker_won_point = ifelse(striker_id == scorerName, 1, 0),
+         returner_won_point = ifelse(returner_id == scorerName, 1, 0)) %>%
   select(internal_point_id,
          shotId,
          time,
@@ -169,11 +169,11 @@ shot_df <- tBall %>%
          returner_region,
          plc,
          strike_significance,
-         striker_name,
+         striker_id,
          striker_x_coordinate,
          striker_y_coordinate,
          striker_won_point,
-         returner_name,
+         returner_id,
          returner_x_coordinate,
          returner_y_coordinate,
          returner_won_point)
