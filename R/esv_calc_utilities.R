@@ -59,18 +59,15 @@ player_tpm_calc <- function(shot_df, matches_to_filter_out){
   
   players <- shot_df$striker_id %>% unique()
   player_tpm <- list()
+  X <- shot_df[!(shot_df$internal_point_id %in% matches_to_filter_out),]
   for(p in players){
     
-    X <- shot_df %>%
-      filter(!(internal_point_id %in% matches_to_filter_out)) %>%
-      filter(striker_id == p) %>%
-      select(plc, next_plc) %>%
-      as.matrix()
+    X1 <- as.matrix(X[X$striker_id == p, c('plc', 'next_plc')])
     
     tpm <- matrix(0, nrow = max_reg^2 + 6, ncol = max_reg^2 + 6)
     colnames(tpm) <- states; rownames(tpm) <- states
     
-    p_tpm <- trans_prob_matrix(X)
+    p_tpm <- trans_prob_matrix(X1)
     reordered_rows <- match(rownames(tpm), rownames(p_tpm))
     reordered_rows <- reordered_rows[!is.na(reordered_rows)]
     reordered_cols <- match(colnames(tpm), colnames(p_tpm))
@@ -112,7 +109,7 @@ player_tpm_calc <- function(shot_df, matches_to_filter_out){
 
 # esv Calculation Function ----
 
-esv_calc <- function(str_id, ret_id, plc, p_tpm, rwr_df, swr_df, avg_swr, avg_rwr, is_striker = T){
+esv_calc <- function(str_id, ret_id, plc, p_tpm, rwr_df, swr_df, avg_swr, avg_rwr, shot_df, is_striker = T){
   
   if(sum(p_tpm[[str_id]][plc,]) == 0){
     tpm <- p_tpm[['AVG']][plc,]
@@ -215,7 +212,13 @@ esv_validation <- function(shot_df, match_to_filter_out){
     shot_df_subset$returner_id,
     shot_df_subset$plc,
     MoreArgs = list(
-      p_tpm = player_tpm, rwr_df = rwr_df, swr_df = swr_df, avg_rwr = avg_rwr, avg_swr = avg_swr, is_striker = T))
+      p_tpm = player_tpm
+      ,rwr_df = rwr_df
+      ,swr_df = swr_df
+      ,avg_rwr = avg_rwr
+      ,avg_swr = avg_swr
+      ,shot_df = shot_df
+      ,is_striker = T))
   
   shot_df_subset$esv_returner <- mapply(
     esv_calc,
@@ -223,7 +226,13 @@ esv_validation <- function(shot_df, match_to_filter_out){
     shot_df_subset$returner_id,
     shot_df_subset$plc,
     MoreArgs = list(
-      p_tpm = player_tpm, rwr_df = rwr_df, swr_df = swr_df, avg_rwr = avg_rwr, avg_swr = avg_swr, is_striker = F))
+      p_tpm = player_tpm
+      ,rwr_df = rwr_df
+      ,swr_df = swr_df
+      ,avg_rwr = avg_rwr
+      ,avg_swr = avg_swr
+      ,shot_df = shot_df
+      ,is_striker = T))
   
   df <- shot_df_subset %>%
     select(
