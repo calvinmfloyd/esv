@@ -112,9 +112,9 @@ player_tpm_calc <- function(shot_df, matches_to_filter_out){
 
 # esv Calculation Function ----
 
-esv_calc <- function(str_name, ret_name, plc, p_tpm, is_striker = TRUE){
+esv_calc <- function(str_id, ret_id, plc, p_tpm, rwr_df, swr_df, avg_swr, avg_rwr, is_striker = T){
   
-  if(sum(p_tpm[[str_name]][plc,]) == 0){
+  if(sum(p_tpm[[str_id]][plc,]) == 0){
     tpm <- p_tpm[['AVG']][plc,]
     if(sum(tpm) == 0){
       x <- shot_df %>% count(next_plc) %>% mutate(n = n/sum(n))
@@ -122,7 +122,7 @@ esv_calc <- function(str_name, ret_name, plc, p_tpm, is_striker = TRUE){
       names(tpm) <- x$next_plc
     }
   } else {
-    tpm <- p_tpm[[str_name]][plc,]
+    tpm <- p_tpm[[str_id]][plc,]
   }
   
   w_prob <- tpm['W']
@@ -135,17 +135,17 @@ esv_calc <- function(str_name, ret_name, plc, p_tpm, is_striker = TRUE){
   non_wl_prob <- cbind(names(non_wl_prob), non_wl_prob) %>% data.frame(stringsAsFactors = F)
   colnames(non_wl_prob) <- c('plc', 'prob')
   non_wl_prob$prob <- non_wl_prob$prob %>% as.numeric()
-  
+
   if(is_striker){
     wr_df <- rwr_df %>%
-      filter(returner_id == str_name, plc %in% rownames(non_wl_prob)) %>%
+      filter(returner_id == ret_id, plc %in% rownames(non_wl_prob)) %>%
       select(plc, rwr) %>%
       rename(wr = rwr)
     avg_wr_df <- rwr_df %>% filter(returner_id == 'AVG') %>% rename(wr = rwr)
     avg_wr <- avg_rwr
   } else {
     wr_df <- swr_df %>%
-      filter(striker_id == ret_name, plc %in% rownames(non_wl_prob)) %>%
+      filter(striker_id == str_id, plc %in% rownames(non_wl_prob)) %>%
       select(plc, swr) %>%
       rename(wr = swr)
     avg_wr_df <- swr_df %>% filter(striker_id == 'AVG') %>% rename(wr = swr)
@@ -214,14 +214,16 @@ esv_validation <- function(shot_df, match_to_filter_out){
     shot_df_subset$striker_id,
     shot_df_subset$returner_id,
     shot_df_subset$plc,
-    MoreArgs = list(p_tpm = player_tpm, is_striker = T))
+    MoreArgs = list(
+      p_tpm = player_tpm, rwr_df = rwr_df, swr_df = swr_df, avg_rwr = avg_rwr, avg_swr = avg_swr, is_striker = T))
   
   shot_df_subset$esv_returner <- mapply(
     esv_calc,
     shot_df_subset$striker_id,
     shot_df_subset$returner_id,
     shot_df_subset$plc,
-    MoreArgs = list(p_tpm = player_tpm, is_striker = F))
+    MoreArgs = list(
+      p_tpm = player_tpm, rwr_df = rwr_df, swr_df = swr_df, avg_rwr = avg_rwr, avg_swr = avg_swr, is_striker = F))
   
   df <- shot_df_subset %>%
     select(
