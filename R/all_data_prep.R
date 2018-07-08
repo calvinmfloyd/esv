@@ -1,4 +1,6 @@
 
+library(dplyr)
+
 options(stringsAsFactors = F)
 
 shot_df_all_raw <- read.csv('../../esv_data/Xdf_AllData.csv', stringsAsFactors = F)
@@ -67,13 +69,4 @@ shot_df_all <- shot_df_all %>%
   mutate(
     striker_won_point = ifelse(striker_id == scorer, 1, 0),
     returner_won_point = ifelse(returner_id == scorer, 1, 0))
-  
-
-
-
-
-
-
-
-
 

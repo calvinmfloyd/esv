@@ -6,6 +6,28 @@ upid_creation <- function(df){
   return(upid)
 }
 
+round_to_nearest <- function(x, base) base*round(x/base)
+
+point_shot_classifier <- function(final_bounce){
+  
+  n <- length(final_bounce)
+  last_bounce_val <- unique(final_bounce)
+  
+  if(last_bounce_val == 'net') shot_class_vec <- c(
+    rep('non_impactful', ifelse(n > 2, n-2, 0)),
+    c('forced_net', 'net') %>% tail(ifelse(n < 2, n, 2)))
+  
+  if(last_bounce_val == 'inbounds') shot_class_vec <- c(
+    rep('non_impactful', ifelse(n > 3, n-3, 0)),
+    c('set_up_pure_winner', 'set_up_opp_pure_winner', 'pure_winner') %>% tail(ifelse(n < 3, n, 3)))
+  
+  if(last_bounce_val == 'out_of_bounds') shot_class_vec <- c(
+    rep('non_impactful', ifelse(n > 2, n-2, 0)),
+    c('forced_out_of_bounds', 'out_of_bounds') %>% tail(ifelse(n < 2, n, 2)))
+  
+  return(shot_class_vec)
+}
+
 tMovement_raw <- read.csv(
   '../../esv_data/tMovement.csv',
   colClasses = c('character', 'numeric', 'character','character',
@@ -114,7 +136,7 @@ bounce_df <- tBall %>%
 
 valid_point_ids <- tPoint %>% filter(valid == 1, tournamentCode == 'MS') %>% pull(internal_point_id) %>% unique()
 
-shot_df <- tBall %>%
+shot_df_sample <- tBall %>%
   arrange(internal_point_id) %>%
   filter(internal_point_id %in% valid_point_ids,
          net == 0) %>%
@@ -178,16 +200,16 @@ shot_df <- tBall %>%
          returner_y_coordinate,
          returner_won_point)
 
-ids_with_repeated_times <- shot_df %>%
+ids_with_repeated_times <- shot_df_sample %>%
   group_by(internal_point_id, time) %>%
   mutate(rn = n()) %>%
   ungroup() %>%
   filter(rn > 1) %>% 
   pull(internal_point_id) %>% 
   unique()
-shot_df <- shot_df %>% filter(!(internal_point_id %in% ids_with_repeated_times))
+shot_df_sample <- shot_df_sample %>% filter(!(internal_point_id %in% ids_with_repeated_times))
 
-shot_df <- shot_df %>%
+shot_df_sample <- shot_df_sample %>%
   group_by(internal_point_id) %>%
   mutate(
     next_plc = ifelse(
@@ -200,7 +222,7 @@ shot_df <- shot_df %>%
       ifelse(strike_significance %in% c('1S', 'out_of_bounds', 'net'), 'insignificant', 'no_return'))) %>%
   ungroup()
 
-shot_df <- shot_df %>%
+shot_df_sample <- shot_df_sample %>%
   left_join(
     bounce_df %>% rename(bounce_x = x, bounce_y = y),
     by = 'shotId')

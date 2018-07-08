@@ -46,6 +46,8 @@ draw_tennis_court_lines_ggplot <- function(){
   
 }
 
+# ----
+
 # Plotting the court surface of the actual tennis court ----
 
 draw_tennis_court_surface_ggplot <- function(){
@@ -66,6 +68,8 @@ draw_tennis_court_surface_ggplot <- function(){
   
 }
 
+# ----
+
 # Plotting the tennis net on the court ----
 
 draw_tennis_net_ggplot <- function(){
@@ -76,6 +80,8 @@ draw_tennis_net_ggplot <- function(){
   return(df)
   
 }
+
+# ----
 
 # Drawing the lines of the grid system used in ESV ----
 
@@ -95,6 +101,8 @@ draw_region_lines_ggplot <- function(){
   return(df)
   
 }
+
+# ----
 
 # Labeling the regions with numbers ----
 
@@ -158,6 +166,8 @@ draw_region_numbers_ggplot <- function(){
   return(df)
 }
 
+# ----
+
 # Outputting rectangles in a dataframe, to help illustrate player strengths/weakness ----
 
 draw_region_rect_ggplot <- function(){
@@ -218,5 +228,4 @@ draw_region_rect_ggplot <- function(){
   
 }
 
-
-
+# ----

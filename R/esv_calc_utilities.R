@@ -26,7 +26,7 @@ swr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
 rwr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
   
   df <- shot_df %>%
-    filter(!(internal_point_id %in% match_to_filter_out)) %>%
+    filter(!(internal_point_id %in% matches_to_filter_out)) %>%
     filter(return_significance != 'insignificant') %>%
     count(returner_id, plc, return_significance) %>%
     mutate(weight_per_return = weights_df$weight[match(return_significance, weights_df$significance)]) %>%
@@ -55,14 +55,14 @@ trans_prob_matrix <- function(X, prob = T){
 
 # Player TPM function ----
 
-player_tpm_calc <- function(shot_df){
+player_tpm_calc <- function(shot_df, matches_to_filter_out){
   
   players <- shot_df$striker_id %>% unique()
   player_tpm <- list()
   for(p in players){
     
     X <- shot_df %>%
-      filter(!(internal_point_id %in% match_to_filter_out)) %>%
+      filter(!(internal_point_id %in% matches_to_filter_out)) %>%
       filter(striker_id == p) %>%
       select(plc, next_plc) %>%
       as.matrix()
@@ -85,7 +85,7 @@ player_tpm_calc <- function(shot_df){
   
   # Average transition probability matrix
   X <- shot_df %>%
-    filter(!(internal_point_id %in% match_to_filter_out)) %>%
+    filter(!(internal_point_id %in% matches_to_filter_out)) %>%
     select(plc, next_plc) %>%
     as.matrix()
   
@@ -112,17 +112,17 @@ player_tpm_calc <- function(shot_df){
 
 # esv Calculation Function ----
 
-esv_calc <- function(str_name, ret_name, plc, is_striker = TRUE){
+esv_calc <- function(str_name, ret_name, plc, p_tpm, is_striker = TRUE){
   
-  if(sum(player_tpm[[str_name]][plc,]) == 0){
-    tpm <- player_tpm[['AVG']][plc,]
+  if(sum(p_tpm[[str_name]][plc,]) == 0){
+    tpm <- p_tpm[['AVG']][plc,]
     if(sum(tpm) == 0){
       x <- shot_df %>% count(next_plc) %>% mutate(n = n/sum(n))
       tpm <- x$n
       names(tpm) <- x$next_plc
     }
   } else {
-    tpm <- player_tpm[[str_name]][plc,]
+    tpm <- p_tpm[[str_name]][plc,]
   }
   
   w_prob <- tpm['W']
@@ -168,7 +168,9 @@ esv_calc <- function(str_name, ret_name, plc, is_striker = TRUE){
 
 # ----
 
-esv_validation <- function(match_to_filter_out){
+# esv Validation Function ----
+
+esv_validation <- function(shot_df, match_to_filter_out){
 
   avg_swr <- shot_df %>%
     filter(!(plc == '1S' & strike_significance == 'out_of_bounds')) %>%
@@ -201,7 +203,7 @@ esv_validation <- function(match_to_filter_out){
   
   # Transition Probability Matrices for each player ----
   
-  player_tpm <- player_tpm_calc(shot_df)
+  player_tpm <- player_tpm_calc(shot_df, matches_to_filter_out = match_to_filter_out)
   
   # Calculating ESV's for each match not filtered out ----
   
@@ -212,14 +214,14 @@ esv_validation <- function(match_to_filter_out){
     shot_df_subset$striker_id,
     shot_df_subset$returner_id,
     shot_df_subset$plc,
-    MoreArgs = list(is_striker = T))
+    MoreArgs = list(p_tpm = player_tpm, is_striker = T))
   
   shot_df_subset$esv_returner <- mapply(
     esv_calc,
     shot_df_subset$striker_id,
     shot_df_subset$returner_id,
     shot_df_subset$plc,
-    MoreArgs = list(is_striker = F))
+    MoreArgs = list(p_tpm = player_tpm, is_striker = F))
   
   df <- shot_df_subset %>%
     select(
@@ -242,3 +244,5 @@ esv_validation <- function(match_to_filter_out){
   return(df)
   
 }
+
+# ----
