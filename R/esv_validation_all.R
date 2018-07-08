@@ -21,11 +21,9 @@ for(p in points){
   
   print(
     sprintf("Starting fitting for point %s, %d/%d at %s", p, which(points == p), length(points), Sys.time()))
-  
-  profvis({
+
   df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)
   df <- df[,c('esv_striker', 'striker_won_point', 'esv_returner', 'returner_won_point')]
-  })
   
   esv_df <- rbind(esv_df, df)
   

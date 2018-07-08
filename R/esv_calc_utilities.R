@@ -3,12 +3,11 @@
 
 swr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
   
-  df <- shot_df %>%
-    filter(!(internal_point_id %in% matches_to_filter_out)) %>%
-    count(striker_id, plc, strike_significance) %>%
-    mutate(weight_per_strike = weights_df$weight[match(strike_significance, weights_df$significance)]) %>%
-    filter(!(plc == '1S' & strike_significance %in% c('out_of_bounds', 'net'))) %>%
-    mutate(weight = n*weight_per_strike)
+  df <- shot_df[!(shot_df$internal_point_id %in% matches_to_filter_out),]
+  df <- df %>% count(striker_id, plc, strike_significance)
+  df$weight_per_strike <- weights_df$weight[match(df$strike_significance, weights_df$significance)]
+  df <- df[!(df$plc == '1S' & df$strike_significance %in% c('out_of_bounds', 'net')),]
+  df$weight <- df$n*df$weight_per_strike
   
   if(avg){ df <- df %>% group_by(plc) } else { df <- df %>% group_by(striker_id, plc) }
     
@@ -24,13 +23,12 @@ swr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
 # Function to create RWR dataframe ----
 
 rwr_calc <- function(shot_df, matches_to_filter_out = c(), avg = F){
-  
-  df <- shot_df %>%
-    filter(!(internal_point_id %in% matches_to_filter_out)) %>%
-    filter(return_significance != 'insignificant') %>%
-    count(returner_id, plc, return_significance) %>%
-    mutate(weight_per_return = weights_df$weight[match(return_significance, weights_df$significance)]) %>%
-    mutate(weight = n*weight_per_return)
+
+  df <- shot_df[!(shot_df$internal_point_id %in% matches_to_filter_out),]
+  df <- df[df$return_significance != 'insignificant',]
+  df <- df %>% count(returner_id, plc, return_significance)
+  df$weight_per_return <- weights_df$weight[match(df$return_significance, weights_df$significance)]
+  df$weight <- df$n*df$weight_per_return
   
   if(avg){ df <- df %>% group_by(plc) } else { df <- df %>% group_by(returner_id, plc) }
   
@@ -64,8 +62,7 @@ player_tpm_calc <- function(shot_df, matches_to_filter_out){
     
     X1 <- as.matrix(X[X$striker_id == p, c('plc', 'next_plc')])
     
-    tpm <- matrix(0, nrow = max_reg^2 + 6, ncol = max_reg^2 + 6)
-    colnames(tpm) <- states; rownames(tpm) <- states
+    tpm <- matrix(0, nrow = max_reg^2 + 6, ncol = max_reg^2 + 6, dimnames = list(states, states))
     
     p_tpm <- trans_prob_matrix(X1)
     reordered_rows <- match(rownames(tpm), rownames(p_tpm))
@@ -81,15 +78,11 @@ player_tpm_calc <- function(shot_df, matches_to_filter_out){
   } 
   
   # Average transition probability matrix
-  X <- shot_df %>%
-    filter(!(internal_point_id %in% matches_to_filter_out)) %>%
-    select(plc, next_plc) %>%
-    as.matrix()
+  X1 <- as.matrix(X[,c('plc', 'next_plc')])
   
-  tpm <- matrix(0, nrow = max_reg^2 + 6, ncol = max_reg^2 + 6)
-  colnames(tpm) <- states; rownames(tpm) <- states
+  tpm <- matrix(0, nrow = max_reg^2 + 6, ncol = max_reg^2 + 6, dimnames = list(states, states))
   
-  avg_tpm <- trans_prob_matrix(X)
+  avg_tpm <- trans_prob_matrix(X1)
   reordered_rows <- match(rownames(tpm), rownames(avg_tpm))
   reordered_rows <- reordered_rows[!is.na(reordered_rows)]
   reordered_cols <- match(colnames(tpm), colnames(avg_tpm))
