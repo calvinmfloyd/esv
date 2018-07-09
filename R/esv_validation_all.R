@@ -8,10 +8,26 @@ source('esv_prep_utilities.R')
 source('esv_calc_utilities.R')
 source('all_data_prep.R')
 
+
+shot_df_all %>%
+  group_by(striker_id) %>%
+  summarise(n = length(unique(match_code))) %>%
+  arrange(desc(n)) %>%
+  ungroup() %>%
+  top_n(5)
+  
+shot_df_all %>%
+  filter(striker_id == 907, returner_id == 710) %>%
+  select(match_code) %>%
+  unique()
+
 # Data Collection  ----
+
+matches_in_question <- c('MS6XO', 'MS6IS', 'MS7ZU')
 
 points <- shot_df_all %>%
   filter(!(plc %in% c('1S') & strike_significance %in% c('out_of_bounds', 'net'))) %>%
+  filter(match_code %in% matches_in_question) %>%
   pull(internal_point_id) %>%
   unique()
 
@@ -23,7 +39,7 @@ for(p in points){
     sprintf("Starting fitting for point %s, %d/%d at %s", p, which(points == p), length(points), Sys.time()))
 
   df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)
-  df <- df[,c('esv_striker', 'striker_won_point', 'esv_returner', 'returner_won_point')]
+  df <- df[,colnames(esv_df)]
   
   esv_df <- rbind(esv_df, df)
   
@@ -34,16 +50,21 @@ for(p in points){
 # Plotting Results ----
 
 seq_by = .1
-seq_min = 0
-seq_max = 1
-bins <- seq(seq_min, seq_max, by = seq_by)
+seq_min = 0.05
+seq_max = .95
+bins <- c(0, seq(seq_min, seq_max, by = seq_by), 1)
 mid_pt <- seq(seq_min + seq_by/2, by = seq_by, length = length(bins)-1)
 bins[1] <- -0.1
 
 tot_esv_df <- data.frame(
   esv = c(esv_df[,'esv_striker'], esv_df[,'esv_returner']),
-  wins = c(esv_df[,'striker_won_point'], esv_df[,'returner_won_point'])
-)
+  wins = c(esv_df[,'striker_won_point'], esv_df[,'returner_won_point']))
+
+tot_esv_df$bin_number <- cut(tot_esv_df$esv, bins, include.lowest = T)
+tot_esv_df %>%
+  group_by(bin_number) %>%
+  summarise(win_pct = sum(wins)/n(), n = n(), wins = sum(wins))
+
 # tot_esv_df <- tot_esv_df %>% filter(esv < 1, esv > 0)
 plot_df <- data.frame(esv = mid_pt, win_pct = 0, n = 0)
 
@@ -53,8 +74,7 @@ for(i in 1:nrow(plot_df)){
   max_esv <- bins[i+1]
   plot_df[i, c('win_pct', 'n')] <- tot_esv_df %>%
     filter(esv >= min_esv, esv < max_esv) %>%
-    summarise(win_pct = sum(wins)/n(),
-              n = n())
+    summarise(win_pct = sum(wins)/n(), n = n())
 }
 
 plot_df <- plot_df[complete.cases(plot_df),]
@@ -63,10 +83,8 @@ linear_model_fit <- lm(win_pct ~ esv, data = plot_df)
 coeffs <- linear_model_fit$coefficients
 r_squared <- summary(linear_model_fit)$r.squared
 
-g <- ggplot() +
-  geom_path(data = data.frame(x = plot_df$esv,
-                              y = {plot_df$esv*coeffs[2] + coeffs[1]}), 
-            mapping =  aes(x = x, y = y)) +
+ggplot() +
+  geom_path(data = data.frame(x = plot_df$esv, y = plot_df$esv*coeffs[2] + coeffs[1]), mapping =  aes(x = x, y = y)) +
   geom_point(data = plot_df, mapping = aes(esv, win_pct, size = n), color = '#0047AB') +
   geom_text(data = data.frame(x = 0.25,
                               y = 0.75,
@@ -74,16 +92,11 @@ g <- ggplot() +
                                            'Win Pct = ',
                                            round(coeffs[2], 3), '*ESV  + ', round(coeffs[1],3))),
             mapping = aes(x = x, y = y, label = txt)) +
-  scale_x_continuous(limits = c(0, 1),
-                     breaks = bins,
-                     expand = c(0,0)) +
-  scale_y_continuous(limits = c(0, 1),
-                     expand = c(0,0)) +
+  scale_x_continuous(limits = c(0, 1), breaks = bins, expand = c(0,0)) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
   xlab('ESV') + ylab('Winning Percentage') + labs(size = 'Number of Shots') +
-  theme(legend.justification=c(1,0), legend.position=c(1,0))
-
-
-
+  theme_minimal() +
+  theme(legend.justification = c(1, 0), legend.position = c(1, 0))
 
 # ----
 

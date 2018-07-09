@@ -225,7 +225,7 @@ esv_validation <- function(shot_df, match_to_filter_out){
       ,avg_rwr = avg_rwr
       ,avg_swr = avg_swr
       ,shot_df = shot_df
-      ,is_striker = T))
+      ,is_striker = F))
   
   df <- shot_df_subset %>%
     select(
