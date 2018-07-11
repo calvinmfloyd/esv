@@ -46,10 +46,7 @@ for(p in points){
   print(
     sprintf("Starting fitting for point %s, %d/%d at %s", p, which(points == p), length(points), Sys.time()))
 
-  df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)
-  df <- df[,colnames(esv_df)]
-  
-  esv_df <- rbind(esv_df, df)
+  esv_df <- rbind(esv_df, esv_validation(shot_df = shot_df_all, match_to_filter_out = p)[,colnames(esv_df)])
   
 }
 
