@@ -186,6 +186,3 @@ p2_potential_esvs <- mapply(
     ,avg_swr = avg_swr
     ,shot_df = shot_df_filtered
     ,is_striker = F))
-
-
-
