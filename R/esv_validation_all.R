@@ -26,7 +26,7 @@ match_summaries <- shot_df_all %>%
       group_by(striker_id) %>%
       summarise(n2 = length(unique(match_code))),
     by = c('p2' = 'striker_id')) %>%
-  filter(n1 >= 3, n2 >= 3) %>%
+  filter(n1 >= 4, n2 >= 4) %>%
   arrange(desc(n1), desc(n2))
   
 # Data Collection  ----
@@ -47,11 +47,11 @@ for(p in points){
   print(
     sprintf("Starting fitting for point %s, %d/%d at %s", p, which(points == p), length(points), Sys.time()))
 
-  df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)[,colnames(esv_df)]
+  df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)
   df <- data.frame(
     esv = c(df[,'esv_striker'], df[,'esv_returner']),
     wins = c(df[,'striker_won_point'], df[,'returner_won_point']))
-  df <- df[df$esv == max(df$esv),]
+  df <- df[df$esv == max(df$esv) | df$esv == min(df$esv),]
   esv_df <- rbind(esv_df, df)
   
 }
@@ -65,9 +65,10 @@ seq_min <- 0.05
 seq_max <- .95
 bins <- c(0, seq(seq_min, seq_max, by = seq_by), 1)
 
-tot_esv_df <- data.frame(
-  esv = c(esv_df[,'esv_striker'], esv_df[,'esv_returner']),
-  wins = c(esv_df[,'striker_won_point'], esv_df[,'returner_won_point']))
+tot_esv_df <- esv_df
+# tot_esv_df <- data.frame(
+#   esv = c(esv_df[,'esv_striker'], esv_df[,'esv_returner']),
+#   wins = c(esv_df[,'striker_won_point'], esv_df[,'returner_won_point']))
 
 tot_esv_df$bin_number <- cut(tot_esv_df$esv, bins, include.lowest = T)
 plot_df <- tot_esv_df %>%
@@ -81,11 +82,12 @@ linear_model_fit <- lm(win_pct ~ mid_pt, data = plot_df)
 coeffs <- linear_model_fit$coefficients
 r_squared <- summary(linear_model_fit)$r.squared
 
-ggplot() +
+g <- ggplot() +
   
   geom_path(
     data = data.frame(x = plot_df$mid_pt, y = plot_df$mid_pt*coeffs[2] + coeffs[1])
-    ,mapping =  aes(x = x, y = y)) +
+    ,mapping =  aes(x = x, y = y)
+    ,color = 'gray40') +
   
   geom_point(
     data = plot_df
@@ -102,7 +104,10 @@ ggplot() +
     ,mapping = aes(x = x, y = y, label = txt)) +
   
   geom_point(
-    data = data.frame(x = c(.75, .8, .85, .9), y = rep(.1, 4), size = c(1000, 3000, 5000, 7000))
+    data = data.frame(
+      x = c(.75, .8, .85, .9)
+      ,y = rep(.1, 4)
+      ,size = c(max(plot_df$n)*0.1, max(plot_df$n)*0.4, max(plot_df$n)*0.7, max(plot_df$n)))
     ,mapping = aes(x, y, size = size)
     ,color = '#0047AB') +
   
@@ -119,8 +124,11 @@ ggplot() +
   theme(
     legend.justification = c(1, 0)
     ,legend.position = c(1, 0)
+    ,plot.margin = unit(c(0, 0, 0, 0), "mm")
     ,panel.grid.major = element_blank()
     ,panel.grid.minor = element_blank())
+
+ggsave('../plots/win_percentage_plot_original_weights.jpg', g, height = 150, width = 200, unit = 'mm')
 
 # ----
 
