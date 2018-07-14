@@ -198,6 +198,7 @@ esv_validation <- function(shot_df, match_to_filter_out){
   # Calculating ESV's for each match not filtered out ----
   
   shot_df_subset <- shot_df %>% filter(internal_point_id %in% match_to_filter_out)
+  shot_df_filtered <- shot_df %>% filter(!internal_point_id %in% match_to_filter_out)
   
   shot_df_subset$esv_striker <- mapply(
     esv_calc,
@@ -210,7 +211,7 @@ esv_validation <- function(shot_df, match_to_filter_out){
       ,swr_df = swr_df
       ,avg_rwr = avg_rwr
       ,avg_swr = avg_swr
-      ,shot_df = shot_df
+      ,shot_df = shot_df_filtered
       ,is_striker = T))
   
   shot_df_subset$esv_returner <- mapply(
@@ -224,7 +225,7 @@ esv_validation <- function(shot_df, match_to_filter_out){
       ,swr_df = swr_df
       ,avg_rwr = avg_rwr
       ,avg_swr = avg_swr
-      ,shot_df = shot_df
+      ,shot_df = shot_df_filtered
       ,is_striker = F))
   
   df <- shot_df_subset %>%

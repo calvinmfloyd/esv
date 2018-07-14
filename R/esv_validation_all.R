@@ -39,19 +39,20 @@ points <- shot_df_all %>%
   pull(internal_point_id) %>%
   unique()
 
-esv_df <- matrix(NA, nrow = 0, ncol = 2)
-# colnames(esv_df) <- c('esv_striker', 'striker_won_point', 'esv_returner', 'returner_won_point')
-colnames(esv_df) <- c('esv', 'wins')
+esv_df <- matrix(NA, nrow = 0, ncol = 4)
+colnames(esv_df) <- c('esv_striker', 'striker_won_point', 'esv_returner', 'returner_won_point')
+# colnames(esv_df) <- c('esv', 'wins')
 for(p in points){
   
   print(
     sprintf("Starting fitting for point %s, %d/%d at %s", p, which(points == p), length(points), Sys.time()))
 
   df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)
-  df <- data.frame(
-    esv = c(df[,'esv_striker'], df[,'esv_returner']),
-    wins = c(df[,'striker_won_point'], df[,'returner_won_point']))
-  df <- df[df$esv == max(df$esv) | df$esv == min(df$esv),]
+  # df <- data.frame(
+  #   esv = c(df[,'esv_striker'], df[,'esv_returner']),
+  #   wins = c(df[,'striker_won_point'], df[,'returner_won_point']))
+  # df <- df[df$esv == max(df$esv) | df$esv == min(df$esv),]
+  df <- df[,colnames(esv_df)]
   esv_df <- rbind(esv_df, df)
   
 }
@@ -65,10 +66,10 @@ seq_min <- 0.05
 seq_max <- .95
 bins <- c(0, seq(seq_min, seq_max, by = seq_by), 1)
 
-tot_esv_df <- esv_df
-# tot_esv_df <- data.frame(
-#   esv = c(esv_df[,'esv_striker'], esv_df[,'esv_returner']),
-#   wins = c(esv_df[,'striker_won_point'], esv_df[,'returner_won_point']))
+# tot_esv_df <- esv_df
+tot_esv_df <- data.frame(
+  esv = c(esv_df[,'esv_striker'], esv_df[,'esv_returner']),
+  wins = c(esv_df[,'striker_won_point'], esv_df[,'returner_won_point']))
 
 tot_esv_df$bin_number <- cut(tot_esv_df$esv, bins, include.lowest = T)
 plot_df <- tot_esv_df %>%
@@ -128,7 +129,7 @@ g <- ggplot() +
     ,panel.grid.major = element_blank()
     ,panel.grid.minor = element_blank())
 
-ggsave('../plots/win_percentage_plot_original_weights.jpg', g, height = 150, width = 200, unit = 'mm')
+ggsave('../plots/win_percentage_plot_original_weights_all.jpg', g, height = 150, width = 200, unit = 'mm')
 
 # ----
 
