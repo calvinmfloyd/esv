@@ -113,19 +113,19 @@ draw_region_lines_ggplot <- function(){
   df <- data.frame(
     x = c(
       rep(ver_lines, each = 2)
-      ,rep(ver_lines, each = 2)
-      ,rep(ver_lines, each = 2)
-      ,rep(c(-max_x, max_x), length = 2*length(hor_lines_general))
-      # ,rep(c(-13.887, -9.887), length = 2*length(short_hor_lines))
-      # ,rep(c(9.887, 13.887), length = 2*length(short_hor_lines))
+      ,rep(c(-max_x, -13.887), length = 2*length(hor_lines_general))
+      ,rep(c(-9.887, 9.887), length = 2*length(hor_lines_general))
+      ,rep(c(13.887, max_x), length = 2*length(hor_lines_general))
+      ,rep(c(-13.887, -9.887), length = 2*length(short_hor_lines))
+      ,rep(c(9.887, 13.887), length = 2*length(short_hor_lines))
     )
     ,y = c(
-      rep(c(-max_y, -13.887), length = 2*length(ver_lines))
-      ,rep(c(-9.887, 9.887), length = 2*length(ver_lines))
-      ,rep(c(13.887, max_y), length = 2*length(ver_lines))
+      rep(c(-max_y, max_y), length = 2*length(ver_lines))
       ,rep(hor_lines_general, each = 2)
-      # ,rep(short_hor_lines, each = 2)
-      # ,rep(short_hor_lines, each = 2)
+      ,rep(hor_lines_general, each = 2)
+      ,rep(hor_lines_general, each = 2)
+      ,rep(short_hor_lines, each = 2)
+      ,rep(short_hor_lines, each = 2)
       )
     ) %>%
     mutate(ID = rep(1:(length(x)/2), each = 2))
@@ -141,7 +141,7 @@ draw_region_lines_ggplot <- function(){
 draw_region_numbers_ggplot <- function(){
   
   net_to_baseline_regions <- 1:8
-  behind_baseline_regions <- 15:18
+  behind_baseline_regions <- 12:15
   
   pos_ver_lines <- ver_lines[ver_lines >= 0]
   hor_lines_general_rev <- rev(hor_lines_general)
@@ -236,11 +236,11 @@ draw_region_rect_ggplot <- function(){
   
   baseline_rects <- cbind(
     data.frame(matrix(
-      rep(pos_ver_lines_baseline, 6),
+      rep(pos_ver_lines_baseline, 3),
       ncol = 2,
       byrow = T)),
     data.frame(matrix(
-      c(rbind(hor_lines_baseline[1:6], lead(hor_lines_baseline,1)[1:6])),
+      c(rbind(hor_lines_baseline[1:3], lead(hor_lines_baseline,1)[1:3])),
       ncol = 2,
       byrow = T))
   )
@@ -251,7 +251,7 @@ draw_region_rect_ggplot <- function(){
     post_baseline_rects)
   
   colnames(rects_df) <- c('xmin', 'xmax', 'ymin', 'ymax') 
-  rects_df$region_number <- as.character(c(4:1, 8:5, 14:9, 18:15))
+  rects_df$region_number <- as.character(c(4:1, 8:5, 11:9, 15:12))
   
   rects_df
   

@@ -13,14 +13,14 @@ doubles_alley_width <- 1.3716
 
 ver_lines <- c(-max_x, -13.887, -9.887, -4.9435, 0, 4.9435, 9.887, 13.887, max_x)
 hor_lines_general <- c(-max_y, -4.115, 0, 4.115, max_y)
-hor_lines_baseline <- c(-max_y, -4.115, -2.0575, 0, 2.0575, 4.115, max_y)
+hor_lines_baseline <- c(-max_y, -2.0575, 2.0575, max_y)
 
 n <- (length(ver_lines)-1)/2
 p_general <- length(hor_lines_general) - 1
 p_baseline <- length(hor_lines_baseline) - 1
 
-region_grid <- matrix(data = c(1:12, 15:18), nrow = 4, byrow = TRUE)
-baseline_regions <- c(9, 10, 11, 12, 13, 14)
+region_grid <- matrix(data = c(1:8, c(9, 10, 10, 11), 12:15), nrow = 4, byrow = TRUE)
+baseline_regions <- c(9, 10, 11)
 
 # Weights used in the ESV estimator ----
 

@@ -39,14 +39,20 @@ points <- shot_df_all %>%
   pull(internal_point_id) %>%
   unique()
 
-esv_df <- matrix(NA, nrow = 0, ncol = 4)
-colnames(esv_df) <- c('esv_striker', 'striker_won_point', 'esv_returner', 'returner_won_point')
+esv_df <- matrix(NA, nrow = 0, ncol = 2)
+# colnames(esv_df) <- c('esv_striker', 'striker_won_point', 'esv_returner', 'returner_won_point')
+colnames(esv_df) <- c('esv', 'wins')
 for(p in points){
   
   print(
     sprintf("Starting fitting for point %s, %d/%d at %s", p, which(points == p), length(points), Sys.time()))
 
-  esv_df <- rbind(esv_df, esv_validation(shot_df = shot_df_all, match_to_filter_out = p)[,colnames(esv_df)])
+  df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = p)[,colnames(esv_df)]
+  df <- data.frame(
+    esv = c(df[,'esv_striker'], df[,'esv_returner']),
+    wins = c(df[,'striker_won_point'], df[,'returner_won_point']))
+  df <- df[df$esv == max(df$esv),]
+  esv_df <- rbind(esv_df, df)
   
 }
 
