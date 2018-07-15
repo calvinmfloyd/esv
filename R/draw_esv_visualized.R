@@ -67,8 +67,7 @@ gdf <- unname(cbind(
       ,avg_rwr = avg_rwr
       ,avg_swr = avg_swr
       ,shot_df = shot_df_sample
-      ,is_striker = F)),
-    3)
+      ,is_striker = F)), 3)
 ))
 
 colnames(gdf) <- c('x', 'y', 'region_number', 'esv')
@@ -92,8 +91,7 @@ gdf <- gdf %>%
   mutate(esv = ifelse(is.na(esv), 'N/A', esv)) %>%
   left_join(
     draw_region_rect_ggplot() %>% mutate(region_number = an(region_number)),
-    by = 'region_number'
-  )
+    by = 'region_number')
 
 color_mapping <- c(
   'no_history' = 'gray90',
@@ -160,4 +158,4 @@ g <- ggplot() +
         legend.title = element_blank(),
         panel.background = element_rect(colour = NULL, fill = NULL))
 
-ggsave('esv_visualized.jpg', g, height = 150, width = 200, unit = 'mm')
+ggsave('../plots/esv_visualized.jpg', g, height = 150, width = 200, unit = 'mm')

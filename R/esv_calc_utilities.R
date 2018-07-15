@@ -145,11 +145,9 @@ esv_calc <- function(str_id, ret_id, plc, p_tpm, rwr_df, swr_df, avg_swr, avg_rw
   non_wl_portion <- non_wl_prob %>%
     left_join(wr_df, by = c('plc')) %>%
     mutate(
-      wr = ifelse(is.na(wr), avg_wr_df$wr[match(plc, avg_wr_df$plc)], wr)
-    ) %>%
-    # mutate(
-    #   wr = ifelse(is.na(wr), avg_wr, wr)
-    # ) %>%
+      wr = ifelse(is.na(wr), avg_wr_df$wr[match(plc, avg_wr_df$plc)], wr)) %>%
+    mutate(
+      wr = ifelse(is.na(wr), avg_wr, wr)) %>%
     summarise(x = sum(prob*wr)) %>%
     pull()
   

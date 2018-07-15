@@ -66,10 +66,17 @@ color_legend_df <- data.frame(
 g <- ggplot() +
   
   geom_hline(yintercept = 0.5, linetype = 1, color = 'gray70', size = 0.5, alpha = 0.25) +
+
+  geom_rect(
+    data = p1p2_esv %>% group_by(time) %>% summarise(max_esv = max(esv), min_esv = min(esv)),
+    mapping = aes(ymin = min_esv - 0.15, ymax = max_esv + 0.15, xmin = time - .25, xmax = time + .25),
+    color = 'gray90', alpha = 0.1) +
   
   geom_line(data = p1_esv_plot,
             mapping = aes(x = x, y = y),
-            colour = 'blue', linetype = 1, alpha = 0.5) +
+            colour = 'blue', linetype = 1, alpha = 0.5
+            # ,se = F
+            ) +
   
   geom_point(data = p1_esv,
              mapping = aes(x = time, y = esv, shape = s_or_r),
@@ -77,16 +84,18 @@ g <- ggplot() +
   
   geom_line(data = p2_esv_plot,
             mapping = aes(x = x, y = y),
-            colour = 'red', linetype = 2, alpha = 0.5) +
+            colour = 'red', linetype = 2, alpha = 0.5
+            # ,se = F
+            ) +
   
   geom_point(data = p2_esv,
              mapping = aes(x = time, y = esv, shape = s_or_r),
              colour = 'red', size = 3, alpha = 0.75) +
   
-  geom_text_repel(data = p1p2_esv,
-            mapping = aes(x = time, y = esv, label = plc, group = plyr, color = plyr),
-            size = 3, force = 10) +
-  
+  # geom_text_repel(data = p1p2_esv,
+  #           mapping = aes(x = time, y = esv, label = plc, group = plyr, color = plyr),
+  #           size = 3, force = 10) +
+
   geom_point(data = point_legend_df,
              mapping = aes(x = x, y = y, shape = label), 
              color = 'gray40', size = 3) +
@@ -104,10 +113,16 @@ g <- ggplot() +
             mapping = aes(x = xend, y = yend, label = plyr), 
             color = 'gray40', size = 4, hjust = -0.1, vjust = 0.55) +
   
+  geom_label(
+    data = p1p2_esv %>% group_by(time, plc) %>% summarise(max_esv = max(esv), min_esv = min(esv)),
+    mapping = aes(x = time, y = max_esv + 0.1, label = plc),
+    color = 'gray40', fill = 'gray90', label.size = NA, alpha = 0.1, size = 3) +
+  
   scale_colour_manual(values = c('Player 1' = 'blue', 'Player 2' = 'red')) +
   scale_shape_manual(values = c('Strike' = 19, 'Return' = 1)) +
   scale_linetype_manual(values = c('Player 1' = 1, 'Player 2' = 2)) +
-  xlim(c(0, max(p1_esv$time)+1)) + ylim(0,1) +
+  xlim(c(0, max(p1_esv$time)+1)) +
+  scale_y_continuous(breaks = seq(0,1,0.25), limits = c(-0.2, 1.2)) + 
   guides(fill = F, size = F, alpha = F, colour = F, shape = F, linetype = F) +
   xlab('Time (s)') + ylab('ESV') +
   theme_minimal() +
@@ -137,21 +152,21 @@ avg_rwr <- shot_df_sample %>%
   summarise(x = sum(n*weight)/sum(n)) %>%
   pull()
 
-# Strike Win Rate Calculation ----
+# Strike Win Rate Calculation
 swr_df <- swr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = F)
 avg_swr_df <- swr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = T)
 avg_swr_df <- cbind('AVG', avg_swr_df, stringsAsFactors = F)
 colnames(avg_swr_df) <- c('striker_id', 'plc', 'swr')
 swr_df <- rbind(swr_df, avg_swr_df)
 
-# Return Win Rate Calculation ----
+# Return Win Rate Calculation
 rwr_df <- rwr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = F)
 avg_rwr_df <- rwr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = T)
 avg_rwr_df <- cbind('AVG', avg_rwr_df, stringsAsFactors = F)
 colnames(avg_rwr_df) <- c('returner_id', 'plc', 'rwr')
 rwr_df <- rbind(rwr_df, avg_rwr_df)
 
-# Transition Probability Matrices for each player ----
+# Transition Probability Matrices for each player
 
 player_tpm <- player_tpm_calc(shot_df_sample, matches_to_filter_out = pt)
 
