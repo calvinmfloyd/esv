@@ -128,14 +128,14 @@ esv_calc <- function(str_id, ret_id, plc, p_tpm, rwr_df, swr_df, avg_swr, avg_rw
 
   if(is_striker){
     wr_df <- rwr_df %>%
-      filter(returner_id == ret_id, plc %in% rownames(non_wl_prob)) %>%
+      filter(returner_id == str_id, plc %in% rownames(non_wl_prob)) %>%
       select(plc, rwr) %>%
       rename(wr = rwr)
     avg_wr_df <- rwr_df %>% filter(returner_id == 'AVG') %>% rename(wr = rwr)
     avg_wr <- avg_rwr
   } else {
     wr_df <- swr_df %>%
-      filter(striker_id == str_id, plc %in% rownames(non_wl_prob)) %>%
+      filter(striker_id == ret_id, plc %in% rownames(non_wl_prob)) %>%
       select(plc, swr) %>%
       rename(wr = swr)
     avg_wr_df <- swr_df %>% filter(striker_id == 'AVG') %>% rename(wr = swr)
@@ -144,10 +144,8 @@ esv_calc <- function(str_id, ret_id, plc, p_tpm, rwr_df, swr_df, avg_swr, avg_rw
   
   non_wl_portion <- non_wl_prob %>%
     left_join(wr_df, by = c('plc')) %>%
-    mutate(
-      wr = ifelse(is.na(wr), avg_wr_df$wr[match(plc, avg_wr_df$plc)], wr)) %>%
-    mutate(
-      wr = ifelse(is.na(wr), avg_wr, wr)) %>%
+    mutate(wr = ifelse(is.na(wr), avg_wr_df$wr[match(plc, avg_wr_df$plc)], wr)) %>%
+    mutate(wr = ifelse(is.na(wr), avg_wr, wr)) %>%
     summarise(x = sum(prob*wr)) %>%
     pull()
   

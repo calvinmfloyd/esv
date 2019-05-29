@@ -14,7 +14,7 @@ source('sample_data_prep.R')
 source('../../esv_hidden_variables.R')
 
 pt <- match_code_hidden
-esv_pt_df <- esv_validation(shot_df = shot_df_sample, match_to_filter_out = pt) 
+esv_pt_df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = pt) 
 
 player_1_id <- unique(esv_pt_df$striker_id)[1]
 player_2_id <- unique(esv_pt_df$striker_id)[2]
@@ -137,14 +137,14 @@ ggsave('../plots/esv_stock_ticker.jpg', g, height = 150, width = 200, unit = 'mm
 
 # Analysis of Player Positioning Decisions ----
 
-avg_swr <- shot_df_sample %>%
+avg_swr <- shot_df_all %>%
   filter(!(plc == '1S' & strike_significance == 'out_of_bounds')) %>%
   count(strike_significance) %>%
   mutate(weight = weights_df$weight[match(strike_significance, weights_df$significance)]) %>%
   summarise(x = sum(n*weight)/sum(n)) %>%
   pull()
 
-avg_rwr <- shot_df_sample %>%
+avg_rwr <- shot_df_all %>%
   filter(
     !(plc == '1S' & strike_significance == 'out_of_bounds'), return_significance != 'insignificant') %>%
   count(return_significance) %>%
@@ -153,24 +153,24 @@ avg_rwr <- shot_df_sample %>%
   pull()
 
 # Strike Win Rate Calculation
-swr_df <- swr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = F)
-avg_swr_df <- swr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = T)
+swr_df <- swr_calc(shot_df = shot_df_all, matches_to_filter_out = pt, avg = F)
+avg_swr_df <- swr_calc(shot_df = shot_df_all, matches_to_filter_out = pt, avg = T)
 avg_swr_df <- cbind('AVG', avg_swr_df, stringsAsFactors = F)
 colnames(avg_swr_df) <- c('striker_id', 'plc', 'swr')
 swr_df <- rbind(swr_df, avg_swr_df)
 
 # Return Win Rate Calculation
-rwr_df <- rwr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = F)
-avg_rwr_df <- rwr_calc(shot_df = shot_df_sample, matches_to_filter_out = pt, avg = T)
+rwr_df <- rwr_calc(shot_df = shot_df_all, matches_to_filter_out = pt, avg = F)
+avg_rwr_df <- rwr_calc(shot_df = shot_df_all, matches_to_filter_out = pt, avg = T)
 avg_rwr_df <- cbind('AVG', avg_rwr_df, stringsAsFactors = F)
 colnames(avg_rwr_df) <- c('returner_id', 'plc', 'rwr')
 rwr_df <- rbind(rwr_df, avg_rwr_df)
 
 # Transition Probability Matrices for each player
 
-player_tpm <- player_tpm_calc(shot_df_sample, matches_to_filter_out = pt)
+player_tpm <- player_tpm_calc(shot_df_all, matches_to_filter_out = pt)
 
-shot_df_filtered <- shot_df_sample %>% filter(!internal_point_id %in% pt)
+shot_df_filtered <- shot_df_all %>% filter(!internal_point_id %in% pt)
 
 potential_plcs <- c('14-6', '14-7', '14-10', '14-11', '14-14')
 
@@ -186,7 +186,9 @@ p1_potential_esvs <- mapply(
     ,avg_rwr = avg_rwr
     ,avg_swr = avg_swr
     ,shot_df = shot_df_filtered
-    ,is_striker = T))
+    ,is_striker = T
+    )
+  )
 
 p2_potential_esvs <- mapply(
   esv_calc,

@@ -64,7 +64,7 @@ for(p in points){
 seq_by <- .1
 seq_min <- 0.05
 seq_max <- .95
-bins <- c(0, seq(seq_min, seq_max, by = seq_by), 1)
+bins <- c(0, seq(seq_min, seq_max, by = seq_by), 1.01)
 
 # tot_esv_df <- esv_df
 tot_esv_df <- data.frame(
@@ -84,6 +84,8 @@ coeffs <- linear_model_fit$coefficients
 r_squared <- summary(linear_model_fit)$r.squared
 
 g <- ggplot() +
+  
+  geom_hline(yintercept = 0.5, alpha = 0.5, color = 'grey') +
   
   geom_path(
     data = data.frame(x = plot_df$mid_pt, y = plot_df$mid_pt*coeffs[2] + coeffs[1])
@@ -117,8 +119,8 @@ g <- ggplot() +
     ,mapping = aes(x, y, label = label)
     ,size = 2.5, nudge_y = 0.05) +
   
-  scale_x_continuous(limits = c(0, 1), breaks = bins) +#, expand = c(0,0)) +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 1), breaks = c(0, seq(0.05, 0.95, .1), 1)) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, .25)) +
   xlab('ESV') + ylab('Win Rate') + 
   guides(size = F) +
   theme_minimal() +
