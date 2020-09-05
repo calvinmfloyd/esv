@@ -2,7 +2,7 @@
 library(dplyr)
 options(stringsAsFactors = F)
 
-shot_df_all_raw <- read.csv('Xdf_AllData.csv', stringsAsFactors = F)
+shot_df_all_raw <- read.csv('../../local/esv/Xdf_AllData.csv', stringsAsFactors = F)
 shot_df_all <- shot_df_all_raw %>% select(-PlyrLocCombo, -NextShotLoc)
 colnames(shot_df_all) <- c(
   'internal_point_id'

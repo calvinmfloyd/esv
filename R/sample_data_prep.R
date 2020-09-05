@@ -29,7 +29,7 @@ point_shot_classifier <- function(final_bounce){
 }
 
 tMovement_raw <- read.csv(
-  'tMovement.csv',
+  '../../local/esv/tMovement.csv',
   colClasses = c('character', 'numeric', 'character','character',
                   'numeric', 'numeric', 'numeric', 'character', 
                   'character', 'numeric', 'numeric', 'numeric',
@@ -38,20 +38,20 @@ tMovement_raw <- read.csv(
   )
 
 tBall_raw <- read.csv(
-  'tBall.csv',
+  '../../local/esv/tBall.csv',
   colClasses = c('numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'numeric'))
 
-tPoint_raw <- read.csv('tPoint.csv', colClasses = 'character')
+tPoint_raw <- read.csv('../../local/esv/tPoint.csv', colClasses = 'character')
 tPoint_raw$rallyLength <- as.numeric(tPoint_raw$rallyLength)
 tPoint_raw$id <- as.numeric(tPoint_raw$id)
 
 tShot_raw <- read.csv(
-  'tShot.csv',
+  '../../local/esv/tShot.csv',
   na.strings = 'NULL',
   colClasses = c('numeric', 'character', 'character', 'numeric','character', 'character', 'numeric', 'numeric', 'numeric')
   )
 
-tTrajectory_raw <- read.csv('tTrajectory.csv', colClasses = 'character')
+tTrajectory_raw <- read.csv('../../local/esv/tTrajectory.csv', colClasses = 'character')
 
 # prepping tTrajectory ----
 

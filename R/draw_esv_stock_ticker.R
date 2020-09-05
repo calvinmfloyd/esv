@@ -4,14 +4,14 @@ library(ggrepel)
 library(dplyr)
 library(DT)
 
-options(stringsAsFactors = F)
+setwd("~/esv/R")
 
 source('static_variables.R')
 source('plotting_utilities.R')
 source('esv_prep_utilities.R')
 source('esv_calc_utilities.R')
 source('sample_data_prep.R')
-source('../../esv_hidden_variables.R')
+source('../../local/esv/hidden_variables.R')
 
 pt <- match_code_hidden
 esv_pt_df <- esv_validation(shot_df = shot_df_all, match_to_filter_out = pt) 
